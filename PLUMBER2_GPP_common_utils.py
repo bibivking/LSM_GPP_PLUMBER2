@@ -26,11 +26,54 @@ def get_header(model_out_name):
     else:
         return 'model_'
 
+def get_hourly_site_names():
+    site_names = [ 'AU-Otw', 'AU-Tum', 'US-Cop', 'US-Ha1', 'US-MMS', 
+                   'US-Ne1', 'US-Ne2', 'US-Ne3', 'US-PFa', 'US-UMB']
+    return site_names  
+
+def get_removed_site_names():
+    remove_sites = ['AU-Rig','AU-Rob','AU-Whr','AU-Ync','CA-NS1','CA-NS2','CA-NS4','CA-NS5','CA-NS6',
+                    'CA-NS7','CA-SF1','CA-SF2','CA-SF3','RU-Che','RU-Zot','UK-PL3','US-SP1',
+                    'AU-Wrr','CN-Din','US-WCr','ZM-Mon', # models miss the simulations of them
+                    # 'SD-Dem', # missed >100 days' fluxes in 2006 
+                    # 'US-PFa', # missed >100 days' fluxes in 1995 
+                    ]
+    return remove_sites  
+
+def set_nan_for_special_site(site_name, var_in, time):
+
+    '''
+    Requirement:
+    time   = nc.num2date(f_flux.variables['time'][:],f_flux.variables['time'].units,
+             only_use_cftime_datetimes=False,only_use_python_datetimes=True)
+    var_in = f.variables[var_name][:].data
+    '''
+    
+    year = np.zeros(len(time))
+
+    for t, tt in enumerate(time):
+        year[t] = tt.year
+
+    if site_name == 'SD-Dem':
+        var_out = np.where(year == 2006, np.nan, var_in)
+    elif site_name == 'US-PFa':
+        var_out = np.where(year == 1995, np.nan, var_in)
+    
+    return var_out
+
 def check_server():
 
     print("CPU usage:", psutil.cpu_percent())
     print("Memory usage:", psutil.virtual_memory().percent, "%")
     print("Disk usage:", psutil.disk_usage("/").percent, "%")  # Replace "/" with the desired path
+    return
+
+def check_directory_exist(directory):
+
+    # Create the directory if it doesn't exist
+    if not os.path.exists(directory):
+        os.makedirs(directory, exist_ok=True)     
+    
     return
 
 def get_region_info(region_name):
@@ -752,42 +795,46 @@ def check_variable_exists_in_one_model(PLUMBER2_path, varname, site_name, model_
                                        key_word, key_word_not=None):
 
     # Set input file path
-    file_path    = glob.glob(PLUMBER2_path+model_name +"/*"+site_name+"*.nc")
-    var_exist    = False
-    try:
-        with nc.Dataset(file_path[0], 'r') as dataset:
-            for var_name in dataset.variables:
-                if varname.lower() == var_name.lower():
-                    var_name_in_model = var_name
-                    var_exist         = True
-                elif varname.lower() in var_name.lower():
-                    variable  = dataset.variables[var_name]
-                    if hasattr(variable, 'long_name'):
-                        long_name = variable.long_name.lower()
-                        if key_word in long_name and all(not re.search(key_not, long_name) for key_not in key_word_not):
+    if model_name == 'obs':
+        var_name_in_model = varname
+        var_exist    = True
+    else:
+        file_path    = glob.glob(PLUMBER2_path+model_name +"/*"+site_name+"*.nc")
+        var_exist    = False
+        try:
+            with nc.Dataset(file_path[0], 'r') as dataset:
+                for var_name in dataset.variables:
+                    if varname.lower() == var_name.lower():
+                        var_name_in_model = var_name
+                        var_exist         = True
+                    elif varname.lower() in var_name.lower():
+                        variable  = dataset.variables[var_name]
+                        if hasattr(variable, 'long_name'):
+                            long_name = variable.long_name.lower()
+                            if key_word in long_name and all(not re.search(key_not, long_name) for key_not in key_word_not):
+                                var_name_in_model = var_name
+                                var_exist         = True
+                        else:
                             var_name_in_model = var_name
                             var_exist         = True
                     else:
-                        var_name_in_model = var_name
-                        var_exist         = True
-                else:
-                    variable  = dataset.variables[var_name]
+                        variable  = dataset.variables[var_name]
 
-                    # Check whether long_name exists
-                    if hasattr(variable, 'long_name'):
-                        long_name = variable.long_name.lower()  # Convert description to lowercase for case-insensitive search
+                        # Check whether long_name exists
+                        if hasattr(variable, 'long_name'):
+                            long_name = variable.long_name.lower()  # Convert description to lowercase for case-insensitive search
 
-                        # Check whether key_word exists
-                        # make sure key_word in long_name and all key_word_not are not in key_word_not
-                        if key_word in long_name and all(not re.search(key_not, long_name) for key_not in key_word_not):
-                            # print(long_name)
-                            var_name_in_model = var_name
-                            var_exist = True
-                            # print(f"The word '{key_word}' is in the description of variable '{var_name}'.")
-                            break  # Exit the loop once a variable is found
+                            # Check whether key_word exists
+                            # make sure key_word in long_name and all key_word_not are not in key_word_not
+                            if key_word in long_name and all(not re.search(key_not, long_name) for key_not in key_word_not):
+                                # print(long_name)
+                                var_name_in_model = var_name
+                                var_exist = True
+                                # print(f"The word '{key_word}' is in the description of variable '{var_name}'.")
+                                break  # Exit the loop once a variable is found
 
-    except Exception as e:
-        print(f"An error occurred: {e}, {site_name}, {model_name}, {file_path}")
+        except Exception as e:
+            print(f"An error occurred: {e}, {site_name}, {model_name}, {file_path}")
 
     # variable doesn't exist
     if not var_exist:
@@ -964,6 +1011,65 @@ def read_climate_class(lat, lon):
 
     return class_name[int(climate_class)-1]
 
+def read_LAI_obs(site_name, PLUMBER2_met_path):
+
+    input_file     = glob.glob(PLUMBER2_met_path + site_name+"*.nc")[0]
+    # print(input_file)
+    f              = nc.Dataset(input_file, mode='r')
+    LAI_obs        = f.variables['LAI'][:,0,0]
+    LAI_obs        = np.where(LAI_obs==-9999., np.nan, LAI_obs)
+    # print('LAI_obs',LAI_obs)
+
+    return LAI_obs
+
+def read_LAI_model(site_name, model_with_LAI, model_LAI_name):
+
+    file_path      = glob.glob("/g/data/w97/mm3972/data/PLUMBER2/" + model_with_LAI +"/*"+site_name+"*.nc")
+    if not file_path:
+        LAI_model  = np.nan
+    else:
+        f              = nc.Dataset(file_path[0])
+        LAI_model_tmp  = f.variables[model_LAI_name][:]
+        veget          = None
+
+        # Reset missing value
+        for attr in ['_FillValue', '_fillValue', 'missing_value']:
+            if hasattr(f.variables[model_LAI_name], attr):
+                var_FillValue = getattr(f.variables[model_LAI_name], attr)
+                LAI_model_tmp = np.where(LAI_model_tmp==var_FillValue, np.nan, LAI_model_tmp)
+                break
+
+        if hasattr(f.variables[model_LAI_name], 'dimensions'):
+            if 'veget' in f.variables[model_LAI_name].dimensions:
+                # print('model_name', model_name, 'site_name', site_name,'has veget demension' )
+                veget = f.dimensions['veget'].size
+
+        if veget is not None:
+            if veget > 1:
+                # if model uses patches
+                # read veget fraction
+                vegetfrac   = f.variables['vegetfrac']
+                # print('model_name', model_name, 'site_name', site_name, 'veget = ', veget, 'vegetfrac =', vegetfrac )
+
+                # initlize Var_tmp_tmp
+                ntime     = len(LAI_model_tmp[:,0,0,0])
+                LAI_model = np.zeros(ntime)
+
+                # calculate the veget fraction weighted pixel value for each time step
+                for i in np.arange(ntime):
+                    for j in np.arange(0,veget):
+                        LAI_model[i] = LAI_model[i] + LAI_model_tmp[i,j]*vegetfrac[i,j]
+            else:
+                # if patch == 1
+                LAI_model = LAI_model_tmp.reshape(-1)
+        else:
+            # if model doesn't use patches
+            LAI_model = LAI_model_tmp.reshape(-1)
+        f.close()
+    # print('LAI_model',LAI_model)
+
+    return LAI_model
+
 def regrid_data(lat_in, lon_in, lat_out, lon_out, input_data, method='linear',threshold=None):
 
     if len(np.shape(lat_in)) == 1:
@@ -1050,11 +1156,12 @@ def set_clim_colors():
                     'Dsb': 'c',  # Mediterranean-influenced warm-summer humid continental climate
                     'Dwa': 'aqua', # Monsoon-influenced hot-summer humid continental climate
                     'Dwb': 'deepskyblue',  # Monsoon-influenced warm-summer humid continental climate
-                    'Dfa': 'dodgerblue',  # Hot-summer humid continental climate
-                    'Dfb': 'royalblue',  # Warm-summer humid continental climate
-                    'Dfc': 'Navy',  # Subarctic climate
+                    'Dfa': 'blue',  # Hot-summer humid continental climate
+                    'Dfb': 'dodgerblue',  # Warm-summer humid continental climate
+                    'Dfc': 'royalblue',  # Subarctic climate
+                    'Dsc': 'Navy', # cold, dry summer climate with cool summers
                     # E: Polar
-                    'ET': 'gray', # Tundra climate;
+                    'ET': 'lime', # Tundra climate;
                     }
 
     return clim_colors
@@ -1119,43 +1226,46 @@ def set_model_colors():
                     'STEMMUS-SCOPE':'purple',# ,
                     }
 
-    # model_colors = {
-    #                 'obs': 'black',
-    #                 'obs_cor': 'dimgrey',
-    #                 '1lin': 'lightcoral' ,
-    #                 '3km27': 'indianred',
-    #                 '6km729': 'firebrick',
-    #                 '6km729lag':'red',
-    #                 'LSTM_eb': 'coral',
-    #                 'LSTM_raw': 'pink',
-    #                 'RF_eb': 'tomato',
-    #                 'RF_raw': 'deeppink',
-    #                 'Manabe':'violet',
-    #                 'ManabeV2':'darkviolet',
-    #                 'PenmanMonteith': 'purple',
-    #                 'CABLE':'darkblue',
-    #                 'CABLE-POP-CN':'blue',
-    #                 'CHTESSEL_ERA5_3':'cornflowerblue',
-    #                 'CHTESSEL_Ref_exp1':'dodgerblue',
-    #                 'CLM5a':'deepskyblue',
-    #                 'GFDL':'c',
-    #                 'JULES_GL9_withLAI':'aquamarine',
-    #                 'JULES_test':'lightseagreen',
-    #                 'MATSIRO':'darkcyan',
-    #                 'NoahMPv401':'darkolivegreen',
-    #                 'ORC2_r6593':'forestgreen',
-    #                 'ORC2_r6593_CO2':'limegreen',
-    #                 'ORC3_r7245_NEE':'lime',
-    #                 'ORC3_r8120':'lightgreen',
-    #                 'STEMMUS-SCOPE':'yellowgreen',
-    #                 'ACASA':'yellow',
-    #                 'LPJ-GUESS':'orange',
-    #                 'MuSICA':'gold',
-    #                 'NASAEnt': 'goldenrod',
-    #                 'QUINCY':'peru',
-    #                 'SDGVM':'sandybrown',
-    #                 }
+    return model_colors
 
+def set_model_colors_with_ML():
+    
+    model_colors = {
+                    'obs': 'black',
+                    'obs_cor': 'dimgrey',
+                    '1lin': 'lightcoral' ,
+                    '3km27': 'indianred',
+                    '6km729': 'firebrick',
+                    '6km729lag':'red',
+                    'LSTM_eb': 'coral',
+                    'LSTM_raw': 'pink',
+                    'RF_eb': 'tomato',
+                    'RF_raw': 'deeppink',
+                    'Manabe':'violet',
+                    'ManabeV2':'darkviolet',
+                    'PenmanMonteith': 'purple',
+                    'CABLE':'darkblue',
+                    'CABLE-POP-CN':'blue',
+                    'CHTESSEL_ERA5_3':'cornflowerblue',
+                    'CHTESSEL_Ref_exp1':'dodgerblue',
+                    'CLM5a':'deepskyblue',
+                    'GFDL':'c',
+                    'JULES_GL9':'aquamarine',
+                    'JULES_GL9_withLAI':'lightseagreen',
+                    'MATSIRO':'darkcyan',
+                    'NoahMPv401':'darkolivegreen',
+                    'ORC2_r6593':'forestgreen',
+                    'ORC2_r6593_CO2':'limegreen',
+                    'ORC3_r7245_NEE':'lime',
+                    'ORC3_r8120':'lightgreen',
+                    'STEMMUS-SCOPE':'yellowgreen',
+                    'ACASA':'yellow',
+                    'LPJ-GUESS':'orange',
+                    'MuSICA':'gold',
+                    'NASAEnt': 'goldenrod',
+                    'QUINCY':'peru',
+                    'SDGVM':'sandybrown',
+                    }
 
     return model_colors
 
@@ -1198,6 +1308,12 @@ def conduct_quality_control(varname, data_input,zscore_threshold=2, gap_fill='na
     elif gap_fill=='nan':
         print('Gap filling by NaN values')
         return data_output
+    
+def gap_fill_1d_data():
+    
+    return 
+
+
 
 def convert_into_kg_m2_s(data_input, var_units):
 

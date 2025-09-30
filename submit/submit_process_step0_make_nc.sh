@@ -405,7 +405,7 @@ def add_NEE_obs_to_nc_file(PLUMBER2_flux_path, site_name, output_file):
     # print('file_path', file_path)
 
     f_in               = nc.Dataset(file_path[0])
-    NEE                = f_in.variables['NEE'][:]
+    NEE                = f_in.variables['NEE'][:].data # add .data to read data only
     NEE                = np.where(NEE == -9999., np.nan, NEE)
     NEE                = convert_from_umol_m2_s_into_gC_m2_s(NEE,"umol/m2/s")
     f_out              = nc.Dataset(output_file,'r+', format='NETCDF4')
@@ -437,7 +437,7 @@ def add_GPP_obs_to_nc_file(PLUMBER2_flux_path, site_name, output_file):
     # print('file_path', file_path)
 
     f_in               = nc.Dataset(file_path[0])
-    GPP                = f_in.variables['GPP'][:]
+    GPP                = f_in.variables['GPP'][:].data # add .data to read data only
     GPP                = np.where(GPP == -9999., np.nan, GPP)
     GPP                = convert_from_umol_m2_s_into_gC_m2_s(GPP,"umol/m2/s")
     f_out              = nc.Dataset(output_file,'r+', format='NETCDF4')
@@ -464,10 +464,10 @@ def add_met_to_nc_file(PLUMBER2_met_path, site_name, output_file):
     # Set input file path
     file_path = glob.glob(PLUMBER2_met_path +"/*"+site_name+"*.nc")
     f_in      = nc.Dataset(file_path[0])
-    Qair      = f_in.variables['Qair'][:]
-    Tair      = f_in.variables['Tair'][:]
-    Psurf     = f_in.variables['Psurf'][:]
-    VPD       = f_in.variables['VPD'][:]/10.
+    Qair      = f_in.variables['Qair'][:].data # add .data to read data only
+    Tair      = f_in.variables['Tair'][:].data # add .data to read data only
+    Psurf     = f_in.variables['Psurf'][:].data # add .data to read data only
+    VPD       = f_in.variables['VPD'][:].data/10.
 
     f_in.close()
 
@@ -510,7 +510,7 @@ def add_rain_to_nc_file(PLUMBER2_met_path, site_name, output_file):
     # Set input file path
     file_path = glob.glob(PLUMBER2_met_path +"/*"+site_name+"*.nc")
     f_in      = nc.Dataset(file_path[0])
-    Precip    = f_in.variables['Precip'][:]
+    Precip    = f_in.variables['Precip'][:].data # add .data to read data only
 
     f_in.close()
 
@@ -533,7 +533,7 @@ def add_short_rad_to_nc_file(PLUMBER2_met_path, site_name, output_file):
     # Set input file path
     file_path = glob.glob(PLUMBER2_met_path +"/*"+site_name+"*.nc")
     f_in      = nc.Dataset(file_path[0])
-    SWdown    = f_in.variables['SWdown'][:]
+    SWdown    = f_in.variables['SWdown'][:].data # add .data to read data only
 
     f_in.close()
 
@@ -839,14 +839,192 @@ def add_SM_top1m_to_nc_file(PLUMBER2_path, output_file, site_name, SM_names, soi
 
     return
 
+################################# Gap_filling ###################################
+
+def if_nan_exist(PLUMBER2_nc_path, var_name, site_name, model_in):
+
+    PLUMBER2_file = f"{PLUMBER2_nc_path}/{site_name}.nc"  # GPP, NEE
+
+    # Read in file
+    if os.path.exists(PLUMBER2_file):
+        with nc.Dataset(PLUMBER2_file) as f:
+            var = f.variables[model_in + '_' + var_name]
+            if np.sum(np.isnan(var)) != 0:
+                return True
+    return False
+
+def gap_fill_site(PLUMBER2_nc_path, var_name, site_name, model_in, check_plot=False):
+
+    # Reading in
+    f      = nc.Dataset(f"{PLUMBER2_nc_path}/{site_name}.nc",'r+')
+    var_in = f.variables[model_in + '_' + var_name][:].data
+    time   = nc.num2date(f.variables['CABLE_time'][:],f.variables['CABLE_time'].units,
+                         only_use_cftime_datetimes=False,only_use_python_datetimes=True)
+
+    # Calculate time interval and total time steps in a day
+    time_intervals = np.diff(time)[0]/timedelta(seconds=3600)
+    day_tot_step   = int(24/time_intervals)
+
+    # Convert to Pandas Series with time as the index
+    var_in     = pd.Series(var_in, index=pd.to_datetime(time))
+    var_out    = copy.deepcopy(var_in)
+
+    if model_in == 'QUINCY':
+
+        # QUINCY seemingly doesn't have 29th Feb, so remove the periods around 29th Feb with NaN 
+        # to let gap fill the whole periods rather than do interpolation
+
+        nan_indices   = np.where(np.isnan(var_out))[0]
+        start_indices = []
+        end_indices   = []
+
+        # Find all leap years where 29th Feb exists
+        for i, t in enumerate(time):
+            # Find the index of the first 29th Feb (00:00) and the first 1st March (00:00) each leap year
+            if t.year % 4 == 0 and t.month == 2 and t.day == 29 and t.hour == 0 and t.minute == 0:
+                start_indices.append(i)
+            elif t.year % 4 == 0 and t.month == 3 and t.day == 3 and t.hour == 1 and t.minute == 0:
+                end_indices.append(i)
+            
+        # Pairing the start and end indices for each leap year
+        leap_year_indices = list(zip(start_indices, end_indices))
+        
+        # Print the results
+        for start, end in leap_year_indices:
+            print(start,end)
+            # Find the first index in nan_indices that is larger than 2000
+            first_nan_after = next((idx for idx in nan_indices if idx >= start), None)
+            last_nan_before = next((idx for idx in nan_indices[::-1] if idx <= end), None)
+            var_in[first_nan_after:last_nan_before] = np.nan
+
+    # Identify gaps
+    gaps       = var_in.isna()
+
+    # Find start and end of gaps
+    gap_starts = var_in.index[gaps & ~gaps.shift(1, fill_value=False)]
+    gap_ends   = var_in.index[gaps & ~gaps.shift(-1, fill_value=False)]
+
+    # Calculate the lengths of gaps
+    gap_lengths = (gap_ends - gap_starts).total_seconds() / 3600  # Convert to hours
+
+    for start, end, gap_len in zip(gap_starts, gap_ends, gap_lengths):
+
+        gap_duration = end - start
+
+        if gap_len <= 3:  # Gaps shorter or equal to 3 hours (interpolate)
+            one_step_before_start = var_in.index[var_in.index.get_loc(start) - 1]
+            two_step_after_end    = var_in.index[var_in.index.get_loc(end) + 2]
+            var_out[one_step_before_start:two_step_after_end] = \
+                  var_in[one_step_before_start:two_step_after_end].interpolate(method='linear')
+
+        elif 3 < gap_len < 2400:  # Gaps longer than 3 hours
+            # Find the closest intact 24-hour diurnal cycle before the gap
+            prev_valid_cycle = None
+            for days_back in range(1, 31):  # Search within a 30-day window
+                try:
+                    temp = var_in.index.get_loc(start - pd.Timedelta(days=days_back))
+                    prev_day_range = var_in[temp:temp+day_tot_step]
+                    if not prev_day_range.isna().any() and len(prev_day_range) == day_tot_step:  # Check for intact 24-hour cycle
+                        prev_valid_cycle = prev_day_range
+                        break
+                except:
+                    continue
+
+            # Find the closest intact 24-hour diurnal cycle after the gap
+            next_valid_cycle = None
+            for days_forward in range(1, 31):  # Search within a 30-day window
+                try:
+                    temp = var_in.index.get_loc(end + pd.Timedelta(days=days_forward - 1))
+                    next_day_range = var_in[temp:temp+day_tot_step]
+                    if not next_day_range.isna().any() and len(next_day_range) == day_tot_step:  # Check for intact 24-hour cycle
+                        next_valid_cycle = next_day_range
+                        break
+                except:
+                    continue
+
+            # Fill the gap
+            start_loc = var_in.index.get_loc(start)
+            end_loc   = var_in.index.get_loc(end)
+
+            for ts in np.arange(start_loc,end_loc+1):
+                time_of_day = var_in.index[ts].time()  # Extract the hour for the gap time
+
+                prev_value  = prev_valid_cycle[prev_valid_cycle.index.time == time_of_day] if prev_valid_cycle is not None else pd.Series()
+                next_value  = next_valid_cycle[next_valid_cycle.index.time == time_of_day] if next_valid_cycle is not None else pd.Series()
+
+                if not prev_value.empty and not next_value.empty:
+                    # If both are found, take the average
+                    var_out[ts] = (prev_value.values[0] + next_value.values[0]) / 2
+                elif not prev_value.empty:
+                    # If only the previous cycle is found
+                    var_out[ts] = prev_value.values[0]
+                elif not next_value.empty:
+                    # If only the next cycle is found
+                    var_out[ts] = next_value.values[0]
+        else:
+            print(f"{model_in}, {site_name}, has long gap (>100 days) of {gap_duration} between {start} and {end}")
+            return
+
+    # Add the soil moisture values to the output nc file
+    try:
+        var = f.createVariable(f"{model_in}_{var_name}_gap_fill", 'f4', (model_in+'_time'))
+    except:
+        var = f.createVariable(f"{model_in}_{var_name}_gap_fill", 'f4', ('CABLE_time'))
+    var.standard_name = f"Gap filled {f.variables[f'{model_in}_{var_name}'].standard_name}"
+    var.long_name     = f"Gap filled {f.variables[f'{model_in}_{var_name}'].long_name}"
+    var.units         = f.variables[f"{model_in}_{var_name}"].units
+    var[:]            = var_out
+    
+    try:
+        var_qc = f.createVariable(f"{model_in}_{var_name}_qc", 'f4', (model_in+'_time'))
+    except:
+        var_qc = f.createVariable(f"{model_in}_{var_name}_qc", 'f4', ('CABLE_time'))
+    var_qc.standard_name = f"Quality Control {f.variables[f'{model_in}_{var_name}'].standard_name}; 0: no gap-filling, 1: gap-filling"
+    var_qc[:]            = np.where(np.isnan(var_in), 1, 0)
+    f.close()
+
+    if check_plot:
+        fig, ax  = plt.subplots(figsize=[10, 7])
+        for start, end, gap_len in zip(gap_starts, gap_ends, gap_lengths):
+            try:
+                ts_s = var_in.index.get_loc(start - pd.Timedelta(days=2))
+                ts_e = var_in.index.get_loc(end   + pd.Timedelta(days=2))
+                sct  = ax.plot(var_in[ts_s:ts_e],  lw=2.0, color='red', ls='-',  alpha=0.4, label='no_gap_fill')
+                sct  = ax.plot(var_out[ts_s:ts_e], lw=2.0, color='blue',ls='--', alpha=0.4, label='gap_fill')
+            except:
+                sct  = ax.plot(var_in[start:end],  lw=2.0, color='red', ls='-',  alpha=0.4, label='no_gap_fill')
+                sct  = ax.plot(var_out[start:end], lw=2.0, color='blue',ls='--', alpha=0.4, label='gap_fill')
+
+        # ax.legend(fontsize=8,frameon=False)
+
+        fig.savefig(f"./plots/check_gap_fill/gap_fill_{var_name}_{site_name}_{model_in}",bbox_inches='tight',dpi=300)
+
+    return
+
+def gap_fill(PLUMBER2_nc_path, var_name, site_name, check_plot=False):
+
+    print('gap filling', site_name)
+    with nc.Dataset(f"{PLUMBER2_nc_path}/{site_name}.nc") as f:
+        model_list = f.variables[f'{var_name}_models'][:]
+
+    model_list = model_list.tolist()
+    model_list.append('obs')
+
+    for model_in in model_list:
+        if if_nan_exist(PLUMBER2_nc_path, var_name, site_name, model_in):
+            print('gap filling', model_in)
+            gap_fill_site(PLUMBER2_nc_path, var_name, site_name, model_in, check_plot)
+
+    return
+
+
 if __name__ == "__main__":
 
     # Path of PLUMBER 2 dataset
     PLUMBER2_path      = "/g/data/w97/mm3972/data/PLUMBER2/"
-
+    PLUMBER2_nc_path   = "/g/data/w97/mm3972/scripts/PLUMBER2/LSM_GPP_PLUMBER2/nc_files/"
     PLUMBER2_flux_path = "/g/data/w97/mm3972/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Flux/"
     PLUMBER2_met_path  = "/g/data/w97/mm3972/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Met/"
-
 
     # The name of models
     # model_names   = [   "1lin","3km27", "6km729","6km729lag",
@@ -873,7 +1051,7 @@ if __name__ == "__main__":
     # The site names
 
     site_names     = ['${site_name}']
-
+    
     for site_name in site_names:
 
         SM_names, soil_thicknesses = get_model_soil_moisture_info(site_name)
@@ -883,42 +1061,53 @@ if __name__ == "__main__":
         zscore_threshold = 3 # beyond 3 standard deviation, out of 99.7%
                              # beyond 4 standard deviation, out of 99.349%
 
-        varname       = "TVeg"
-        trans_dict    = check_variable_exists(PLUMBER2_path, varname, site_name, model_names)#, key_word, key_word_not)
-        make_nc_file(PLUMBER2_path, trans_dict, model_names, site_name, output_file, varname, zscore_threshold)
-        gc.collect()
+        check_plot = True
+        var_name   = 'NEE'
+        gap_fill(PLUMBER2_nc_path, var_name, site_name, check_plot=check_plot)
 
-        varname       = "Qle"
-        qle_dict      = check_variable_exists(PLUMBER2_path, varname, site_name, model_names)#, key_word, key_word_not)
-        make_nc_file(PLUMBER2_path, qle_dict, model_names, site_name, output_file, varname, zscore_threshold)
-        gc.collect()
+        check_plot = True
+        var_name   = 'GPP'
+        gap_fill(PLUMBER2_nc_path, var_name, site_name, check_plot=check_plot)
 
-        varname       = "Qh"
-        qh_dict       = check_variable_exists(PLUMBER2_path, varname, site_name, model_names)#, key_word, key_word_not)
-        make_nc_file(PLUMBER2_path, qh_dict, model_names, site_name, output_file, varname, zscore_threshold)
-        gc.collect()
+        # varname       = "TVeg"
+        # trans_dict    = check_variable_exists(PLUMBER2_path, varname, site_name, model_names)#, key_word, key_word_not)
+        # make_nc_file(PLUMBER2_path, trans_dict, model_names, site_name, output_file, varname, zscore_threshold)
+        # gc.collect()
 
-        varname       = "NEE"
-        nee_dict      = check_variable_exists(PLUMBER2_path, varname, site_name, model_names)#, key_word, key_word_not)
-        make_nc_file(PLUMBER2_path, nee_dict, model_names, site_name, output_file, varname, zscore_threshold)
-        gc.collect()
+        # varname       = "Qle"
+        # qle_dict      = check_variable_exists(PLUMBER2_path, varname, site_name, model_names)#, key_word, key_word_not)
+        # make_nc_file(PLUMBER2_path, qle_dict, model_names, site_name, output_file, varname, zscore_threshold)
+        # gc.collect()
 
-        varname       = "GPP"
-        gpp_dict      = check_variable_exists(PLUMBER2_path, varname, site_name, model_names)#, key_word, key_word_not)
-        make_nc_file(PLUMBER2_path, gpp_dict, model_names, site_name, output_file, varname, zscore_threshold)
-        gc.collect()
+        # varname       = "Qh"
+        # qh_dict       = check_variable_exists(PLUMBER2_path, varname, site_name, model_names)#, key_word, key_word_not)
+        # make_nc_file(PLUMBER2_path, qh_dict, model_names, site_name, output_file, varname, zscore_threshold)
+        # gc.collect()
 
-        add_Qle_obs_to_nc_file(PLUMBER2_flux_path, site_name, output_file)
-        gc.collect()
+        # varname       = "NEE"
+        # nee_dict      = check_variable_exists(PLUMBER2_path, varname, site_name, model_names)#, key_word, key_word_not)
+        # make_nc_file(PLUMBER2_path, nee_dict, model_names, site_name, output_file, varname, zscore_threshold)
+        # gc.collect()
 
-        add_Qh_obs_to_nc_file(PLUMBER2_flux_path, site_name, output_file)
-        gc.collect()
+        # varname       = "GPP"
+        # gpp_dict      = check_variable_exists(PLUMBER2_path, varname, site_name, model_names)#, key_word, key_word_not)
+        # make_nc_file(PLUMBER2_path, gpp_dict, model_names, site_name, output_file, varname, zscore_threshold)
+        # gc.collect()
 
-        add_NEE_obs_to_nc_file(PLUMBER2_flux_path, site_name, output_file)
-        gc.collect()
+        # add_Qle_obs_to_nc_file(PLUMBER2_flux_path, site_name, output_file)
+        # gc.collect()
+        #
+        # add_Qh_obs_to_nc_file(PLUMBER2_flux_path, site_name, output_file)
+        # gc.collect()
+        #
+        # add_NEE_obs_to_nc_file(PLUMBER2_flux_path, site_name, output_file)
+        # gc.collect()
+        #
+        # add_GPP_obs_to_nc_file(PLUMBER2_flux_path, site_name, output_file)
+        # gc.collect()
 
-        add_met_to_nc_file(PLUMBER2_met_path, site_name, output_file)
-        gc.collect()
+        # add_met_to_nc_file(PLUMBER2_met_path, site_name, output_file)
+        # gc.collect()
 
         # Qle_Qh_threshold=10
         # add_EF_to_nc_file(output_file, zscore_threshold, Qle_Qh_threshold)
@@ -927,16 +1116,13 @@ if __name__ == "__main__":
         # add_rain_to_nc_file(PLUMBER2_met_path, site_name, output_file)
         # gc.collect()
 
-        add_short_rad_to_nc_file(PLUMBER2_met_path, site_name, output_file)
-        gc.collect()
+        # add_short_rad_to_nc_file(PLUMBER2_met_path, site_name, output_file)
+        # gc.collect()
 
-        add_GPP_obs_to_nc_file(PLUMBER2_flux_path, site_name, output_file)
-        gc.collect()
-
-        # Function add_SM_top1m_to_nc_file content some models are not used in the paper
-        # it will lead to crash, so comment it out
-        add_SM_top1m_to_nc_file(PLUMBER2_path,output_file,site_name,SM_names,soil_thicknesses)
-        gc.collect()
+        # # Function add_SM_top1m_to_nc_file content some models are not used in the paper
+        # # it will lead to crash, so comment it out
+        # add_SM_top1m_to_nc_file(PLUMBER2_path,output_file,site_name,SM_names,soil_thicknesses)
+        # gc.collect()
 
 EOF_make_nc
 
@@ -948,9 +1134,9 @@ cat > submit_make_nc_${site_name}.sh << EOF_submit
 
 #PBS -m ae
 #PBS -P w97
-#PBS -q normalbw
-#PBS -l walltime=6:00:00
-#PBS -l mem=50GB
+#PBS -q express
+#PBS -l walltime=0:10:00
+#PBS -l mem=10GB
 #PBS -l ncpus=1
 #PBS -j oe
 #PBS -l wd

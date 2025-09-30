@@ -182,10 +182,7 @@ if __name__ == "__main__":
     site_names, IGBP_types, clim_types, model_names = load_default_list()
 
     clarify_site      = {'opt': True,
-                         'remove_site': ['AU-Rig','AU-Rob','AU-Whr','AU-Ync','CA-NS1','CA-NS2','CA-NS4','CA-NS5','CA-NS6', # rainfall problems
-                                         'CA-NS7','CA-SF1','CA-SF2','CA-SF3','RU-Che','RU-Zot','UK-PL3','US-SP1',
-                                         'AU-Wrr','CN-Din','US-WCr','ZM-Mon' # models miss the simulations of them
-                                         ]}
+                         'remove_site': get_removed_site_names()}
     middle_day=False
     criteria  = 2
     data_selection(site_names, clarify_site=clarify_site, middle_day=middle_day, criteria=criteria)
