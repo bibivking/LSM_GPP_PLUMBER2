@@ -185,8 +185,8 @@ if __name__ == "__main__":
 
     # Path of ERA 5-land dataset
     ERA_path       = "/g/data/zz93/era5-land/reanalysis"
-    nc_path        = "/g/data/w97/mm3972/scripts/PLUMBER2/LSM_GPP_PLUMBER2/nc_files"
-    PLUMBER2_path  = "/g/data/w97/mm3972/scripts/PLUMBER2/LSM_VPD_PLUMBER2/nc_files/"
+    nc_path        = "/srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_GPP_PLUMBER2/nc_files"
+    PLUMBER2_path  = "/srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_VPD_PLUMBER2/nc_files/"
 
     year_s         = 1971
     year_e         = 2020

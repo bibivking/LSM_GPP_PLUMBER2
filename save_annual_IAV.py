@@ -34,8 +34,8 @@ def save_IAV(var_name, model_in):
         
         Site_name[s] =  site_name
         
-        PLUMBER2_path_site = f"/g/data/w97/mm3972/scripts/PLUMBER2/LSM_GPP_PLUMBER2/nc_files/{site_name}.nc"
-        PLUMBER2_met_path  = "/g/data/w97/mm3972/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Flux/"
+        PLUMBER2_path_site = f"/srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_GPP_PLUMBER2/nc_files/{site_name}.nc"
+        PLUMBER2_met_path  = "/srv/ccrc/LandAP/z5218916/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Flux/"
         file_path          = glob.glob(PLUMBER2_met_path+"/*"+site_name+"*.nc")
 
         with nc.Dataset(PLUMBER2_path_site, mode='r') as f:
@@ -100,7 +100,7 @@ def save_IAV(var_name, model_in):
 # Define a function to generate each plot
 def save_IAV_parallal(var_name):
     
-    PLUMBER2_path_site = "/g/data/w97/mm3972/scripts/PLUMBER2/LSM_GPP_PLUMBER2/nc_files/AU-How.nc"
+    PLUMBER2_path_site = "/srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_GPP_PLUMBER2/nc_files/AU-How.nc"
     f                  = nc.Dataset(PLUMBER2_path_site, mode='r')
     model_list         = f.variables[f'{var_name}_models'][:]
     model_list         = model_list.tolist()
@@ -117,9 +117,9 @@ def save_IAV_parallal(var_name):
 if __name__ == "__main__":
 
     # Path of PLUMBER 2 dataset
-    PLUMBER2_path      = "/g/data/w97/mm3972/data/PLUMBER2/"
-    PLUMBER2_flux_path = "/g/data/w97/mm3972/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Flux/"
-    PLUMBER2_met_path  = "/g/data/w97/mm3972/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Met/"
+    PLUMBER2_path      = "/srv/ccrc/LandAP/z5218916/data/PLUMBER2/"
+    PLUMBER2_flux_path = "/srv/ccrc/LandAP/z5218916/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Flux/"
+    PLUMBER2_met_path  = "/srv/ccrc/LandAP/z5218916/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Met/"
 
     site_names, IGBP_types, clim_types, model_names = load_default_list()
 

@@ -29,7 +29,7 @@ from copy import deepcopy
 
 def read_RH(site_name):
 
-    PLUMBER2_met_path = '/g/data/w97/mm3972/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Met/'
+    PLUMBER2_met_path = '/srv/ccrc/LandAP/z5218916/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Met/'
     file_path = glob.glob(PLUMBER2_met_path + "*" + site_name + "*.nc")
 
     if not file_path:

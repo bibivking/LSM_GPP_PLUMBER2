@@ -95,8 +95,8 @@ def get_regional_site_list(region= {'name':'global','lat':None, 'lon':None}):
     Get the site name list for the selected region
     '''
 
-    PLUMBER2_path      = "/g/data/w97/mm3972/scripts/PLUMBER2/LSM_VPD_PLUMBER2/nc_files/"
-    PLUMBER2_met_path  = "/g/data/w97/mm3972/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Met/"
+    PLUMBER2_path      = "/srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_VPD_PLUMBER2/nc_files/"
+    PLUMBER2_met_path  = "/srv/ccrc/LandAP/z5218916/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Met/"
     all_site_path      = sorted(glob.glob(PLUMBER2_path+"/*.nc"))
     site_names         = [os.path.basename(site_path).split(".")[0] for site_path in all_site_path]
     lat_dict, lon_dict = read_lat_lon(site_names, PLUMBER2_met_path)
@@ -195,7 +195,7 @@ def decide_filename(day_time=False, summer_time=False, energy_cor=False,
 def get_model_out_list(var_name):
 
     # Using AR-SLu.nc file to get the model namelist
-    f             = nc.Dataset("/g/data/w97/mm3972/scripts/PLUMBER2/LSM_VPD_PLUMBER2/nc_files/AR-SLu.nc", mode='r')
+    f             = nc.Dataset("/srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_VPD_PLUMBER2/nc_files/AR-SLu.nc", mode='r')
     if var_name == 'Gs':
         model_in_list = f.variables['Qle_models']
     elif var_name == 'nonTVeg':
@@ -328,7 +328,7 @@ def change_model_name(model_in):
 def load_default_list():
 
     # The site names
-    PLUMBER2_path  = "/g/data/w97/mm3972/scripts/PLUMBER2/LSM_VPD_PLUMBER2/nc_files/"
+    PLUMBER2_path  = "/srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_VPD_PLUMBER2/nc_files/"
     all_site_path  = sorted(glob.glob(PLUMBER2_path+"/*.nc"))
     site_names     = [os.path.basename(site_path).split(".")[0] for site_path in all_site_path]
 
@@ -400,7 +400,7 @@ def load_sites_in_country_list(country_code):
 
     # The site names
     if country_code != None:
-        PLUMBER2_path  = "/g/data/w97/mm3972/scripts/PLUMBER2/LSM_VPD_PLUMBER2/nc_files/"
+        PLUMBER2_path  = "/srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_VPD_PLUMBER2/nc_files/"
         all_site_path  = sorted(glob.glob(PLUMBER2_path+"/*"+country_code+"*.nc"))
         site_names     = [os.path.basename(site_path).split(".")[0] for site_path in all_site_path]
     else:
@@ -991,7 +991,7 @@ def read_climate_class(lat, lon):
     Returns:
         int: The climate_class value of the nearest pixel.
     """
-    climate_class_path = '/g/data/w97/mm3972/data/Köppen-Geiger_climate_classification/Beck_KG_V1/Beck_KG_V1_present_0p0083.nc'
+    climate_class_path = '/srv/ccrc/LandAP/z5218916/data/Köppen-Geiger_climate_classification/Beck_KG_V1/Beck_KG_V1_present_0p0083.nc'
     f                  = nc.Dataset(climate_class_path)
 
     latitude  = f.variables['latitude'][:]
@@ -1024,7 +1024,7 @@ def read_LAI_obs(site_name, PLUMBER2_met_path):
 
 def read_LAI_model(site_name, model_with_LAI, model_LAI_name):
 
-    file_path      = glob.glob("/g/data/w97/mm3972/data/PLUMBER2/" + model_with_LAI +"/*"+site_name+"*.nc")
+    file_path      = glob.glob("/srv/ccrc/LandAP/z5218916/data/PLUMBER2/" + model_with_LAI +"/*"+site_name+"*.nc")
     if not file_path:
         LAI_model  = np.nan
     else:
@@ -1363,7 +1363,7 @@ def get_model_soil_moisture_info(site_name):
                       'STEMMUS-SCOPE':'SoilMoist'} #  'SDGVM':'RootMoist',
 
     # get soil thickness in MuSICA model
-    MuSICA_path = glob.glob(f"/g/data/w97/mm3972/data/PLUMBER2/MuSICA/{site_name}*.nc")
+    MuSICA_path = glob.glob(f"/srv/ccrc/LandAP/z5218916/data/PLUMBER2/MuSICA/{site_name}*.nc")
 
     if MuSICA_path:
         f                = nc.Dataset(MuSICA_path[0])

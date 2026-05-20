@@ -218,10 +218,10 @@ if __name__ == "__main__":
 
     # Path of ERA 5-land dataset
     ERA_path       = "/g/data/zz93/era5-land/reanalysis"
-    nc_path        = "/g/data/w97/mm3972/scripts/PLUMBER2/LSM_GPP_PLUMBER2/nc_files"
+    nc_path        = "/srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_GPP_PLUMBER2/nc_files"
     var_name       = "2t" # 2m temperature, units K
 
-    PLUMBER2_path  = "/g/data/w97/mm3972/scripts/PLUMBER2/LSM_VPD_PLUMBER2/nc_files/"
+    PLUMBER2_path  = "/srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_VPD_PLUMBER2/nc_files/"
     all_site_path  = sorted(glob.glob(PLUMBER2_path+"/*.nc"))
     site_names     = [os.path.basename(site_path).split(".")[0] for site_path in all_site_path]
     smooth_window  = 7 # odd number only

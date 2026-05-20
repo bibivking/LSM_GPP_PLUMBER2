@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set the path to search
-PLUMBER2_met_path="/g/data/w97/mm3972/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Met/"
+PLUMBER2_met_path="/srv/ccrc/LandAP/z5218916/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Met/"
 
 # Loop through all files in the path
 for file in $(find $PLUMBER2_met_path -type f -name "*.nc"); do
@@ -15,7 +15,7 @@ for file in $(find $PLUMBER2_met_path -type f -name "*.nc"); do
   # Print the site name to the console
   echo "$site_name"
 
-cd /g/data/w97/mm3972/scripts/PLUMBER2/LSM_GPP_PLUMBER2
+cd /srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_GPP_PLUMBER2
 
 cat > make_nc_file_${site_name}.py << EOF_make_nc
 #!/usr/bin/env python
@@ -1021,10 +1021,10 @@ def gap_fill(PLUMBER2_nc_path, var_name, site_name, check_plot=False):
 if __name__ == "__main__":
 
     # Path of PLUMBER 2 dataset
-    PLUMBER2_path      = "/g/data/w97/mm3972/data/PLUMBER2/"
-    PLUMBER2_nc_path   = "/g/data/w97/mm3972/scripts/PLUMBER2/LSM_GPP_PLUMBER2/nc_files/"
-    PLUMBER2_flux_path = "/g/data/w97/mm3972/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Flux/"
-    PLUMBER2_met_path  = "/g/data/w97/mm3972/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Met/"
+    PLUMBER2_path      = "/srv/ccrc/LandAP/z5218916/data/PLUMBER2/"
+    PLUMBER2_nc_path   = "/srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_GPP_PLUMBER2/nc_files/"
+    PLUMBER2_flux_path = "/srv/ccrc/LandAP/z5218916/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Flux/"
+    PLUMBER2_met_path  = "/srv/ccrc/LandAP/z5218916/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Met/"
 
     # The name of models
     # model_names   = [   "1lin","3km27", "6km729","6km729lag",
@@ -1057,7 +1057,7 @@ if __name__ == "__main__":
         SM_names, soil_thicknesses = get_model_soil_moisture_info(site_name)
 
         print('site_name',site_name)
-        output_file      = "/g/data/w97/mm3972/scripts/PLUMBER2/LSM_GPP_PLUMBER2/nc_files/"+site_name+".nc"
+        output_file      = "/srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_GPP_PLUMBER2/nc_files/"+site_name+".nc"
         zscore_threshold = 3 # beyond 3 standard deviation, out of 99.7%
                              # beyond 4 standard deviation, out of 99.349%
 
@@ -1127,7 +1127,7 @@ if __name__ == "__main__":
 EOF_make_nc
 
 
-cd /g/data/w97/mm3972/scripts/PLUMBER2/LSM_GPP_PLUMBER2/submit
+cd /srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_GPP_PLUMBER2/submit
 
 cat > submit_make_nc_${site_name}.sh << EOF_submit
 #!/bin/bash
@@ -1145,7 +1145,7 @@ cat > submit_make_nc_${site_name}.sh << EOF_submit
 module use /g/data/hh5/public/modules
 module load conda/analysis3-unstable
 
-cd /g/data/w97/mm3972/scripts/PLUMBER2/LSM_GPP_PLUMBER2
+cd /srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_GPP_PLUMBER2
 
 python make_nc_file_${site_name}.py
 rm make_nc_file_${site_name}.py

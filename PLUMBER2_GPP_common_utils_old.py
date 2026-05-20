@@ -140,7 +140,7 @@ def decide_filename(day_time=False, summer_time=False, energy_cor=False,
 def get_model_out_list(var_name):
 
     # Using AR-SLu.nc file to get the model namelist
-    f             = nc.Dataset("/g/data/w97/mm3972/scripts/PLUMBER2/LSM_VPD_PLUMBER2/nc_files/AR-SLu.nc", mode='r')
+    f             = nc.Dataset("/srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_VPD_PLUMBER2/nc_files/AR-SLu.nc", mode='r')
     if var_name == 'Gs':
         model_in_list = f.variables['Qle_models']
     else:
@@ -263,7 +263,7 @@ def change_model_name(model_in):
 def load_default_list():
 
     # The site names
-    PLUMBER2_path  = "/g/data/w97/mm3972/scripts/PLUMBER2/LSM_VPD_PLUMBER2/nc_files/"
+    PLUMBER2_path  = "/srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_VPD_PLUMBER2/nc_files/"
     all_site_path  = sorted(glob.glob(PLUMBER2_path+"/*.nc"))
     site_names     = [os.path.basename(site_path).split(".")[0] for site_path in all_site_path]
 
@@ -326,7 +326,7 @@ def load_sites_in_country_list(country_code):
 
     # The site names
     if country_code != None:
-        PLUMBER2_path  = "/g/data/w97/mm3972/scripts/PLUMBER2/LSM_VPD_PLUMBER2/nc_files/"
+        PLUMBER2_path  = "/srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_VPD_PLUMBER2/nc_files/"
         all_site_path  = sorted(glob.glob(PLUMBER2_path+"/*"+country_code+"*.nc"))
         site_names     = [os.path.basename(site_path).split(".")[0] for site_path in all_site_path]
     else:
@@ -918,7 +918,7 @@ def read_climate_class(lat, lon):
     Returns:
         int: The climate_class value of the nearest pixel.
     """
-    climate_class_path = '/g/data/w97/mm3972/data/Köppen-Geiger_climate_classification/Beck_KG_V1/Beck_KG_V1_present_0p0083.nc'
+    climate_class_path = '/srv/ccrc/LandAP/z5218916/data/Köppen-Geiger_climate_classification/Beck_KG_V1/Beck_KG_V1_present_0p0083.nc'
     f                  = nc.Dataset(climate_class_path)
 
     latitude  = f.variables['latitude'][:]

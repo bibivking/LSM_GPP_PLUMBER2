@@ -74,7 +74,7 @@ def plot_annual_value_barplot_single_site(var_name, site_name, grow_season=0):
 
     secondly_to_annually = 3600*24*365.
 
-    PLUMBER2_path_site = "/g/data/w97/mm3972/scripts/PLUMBER2/LSM_GPP_PLUMBER2/nc_files/AR-SLu.nc"
+    PLUMBER2_path_site = "/srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_GPP_PLUMBER2/nc_files/AR-SLu.nc"
     f                  = nc.Dataset(PLUMBER2_path_site, mode='r')
     model_list         = f.variables[f'{var_name}_models'][:]
     model_list         = model_list.tolist()
@@ -181,7 +181,7 @@ def plot_all_barplot_single_site(var_name, site_name):
 
     secondly_to_daily  = 3600*24.
 
-    PLUMBER2_path_site = "/g/data/w97/mm3972/scripts/PLUMBER2/LSM_GPP_PLUMBER2/nc_files/AR-SLu.nc"
+    PLUMBER2_path_site = "/srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_GPP_PLUMBER2/nc_files/AR-SLu.nc"
     f                  = nc.Dataset(PLUMBER2_path_site, mode='r')
     model_list         = f.variables[f'{var_name}_models'][:]
     model_list         = model_list.tolist()

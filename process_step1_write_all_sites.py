@@ -122,7 +122,7 @@ def read_data(var_name, site_name, input_file):
     # var_output['obs_Precip'] = f.variables['obs_Precip'][:]
     var_output['obs_SWdown'] = f.variables['obs_SWdown'][:]
 
-    greenness_file = '/g/data/w97/mm3972/data/PLUMBER2/NoahMPv401/NoahMPv401_UAlb_r1a_'+site_name+'.nc'
+    greenness_file = '/srv/ccrc/LandAP/z5218916/data/PLUMBER2/NoahMPv401/NoahMPv401_UAlb_r1a_'+site_name+'.nc'
     f_green        = nc.Dataset(greenness_file, mode='r')
     var_output['NoahMPv401_greenness'] = f_green.variables['Greenness'][:,0,0]
 
@@ -534,7 +534,7 @@ def add_greenness_to_write_spatial_land_days(var_name, site_names):
     for i, site_name in enumerate(site_names):
 
         site_mask      = (var_output['site_name'] == site_name)
-        greenness_file = '/g/data/w97/mm3972/data/PLUMBER2/NoahMPv401/NoahMPv401_UAlb_r1a_'+site_name+'.nc'
+        greenness_file = '/srv/ccrc/LandAP/z5218916/data/PLUMBER2/NoahMPv401/NoahMPv401_UAlb_r1a_'+site_name+'.nc'
         f_green        = nc.Dataset(greenness_file, mode='r')
         var_output.loc[site_mask,'NoahMPv401_greenness'] = f_green.variables['Greenness'][:,0,0]
 
@@ -554,9 +554,9 @@ def check_LAI(var_name, site_names, PLUMBER2_met_path):
 if __name__ == "__main__":
 
     # Path of PLUMBER 2 dataset
-    PLUMBER2_met_path   = "/g/data/w97/mm3972/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Met/"
-    PLUMBER2_path       = "/g/data/w97/mm3972/scripts/PLUMBER2/LSM_GPP_PLUMBER2/nc_files/"
-    PLUMBER2_path_input = "/g/data/w97/mm3972/data/PLUMBER2/"
+    PLUMBER2_met_path   = "/srv/ccrc/LandAP/z5218916/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Met/"
+    PLUMBER2_path       = "/srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_GPP_PLUMBER2/nc_files/"
+    PLUMBER2_path_input = "/srv/ccrc/LandAP/z5218916/data/PLUMBER2/"
 
     # The site names
     all_site_path     = sorted(glob.glob(PLUMBER2_met_path+"/*.nc"))

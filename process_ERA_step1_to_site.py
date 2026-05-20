@@ -52,7 +52,7 @@ def extract_value_at_year(var_name, ERA_path, year, site_names):
     values     = {}
 
     # Get lats and lons
-    PLUMBER2_met_path  = "/g/data/w97/mm3972/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Met"
+    PLUMBER2_met_path  = "/srv/ccrc/LandAP/z5218916/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Met"
     lat_dict, lon_dict = read_lat_lon(site_names, PLUMBER2_met_path)
 
     for i, file_name in enumerate(file_names):
@@ -197,8 +197,8 @@ if __name__ == "__main__":
 
     # Path of ERA 5-land dataset
     ERA_path       = "/g/data/zz93/era5-land/reanalysis"
-    nc_path        = "/g/data/w97/mm3972/scripts/PLUMBER2/LSM_GPP_PLUMBER2/nc_files"
-    PLUMBER2_path  = "/g/data/w97/mm3972/scripts/PLUMBER2/LSM_VPD_PLUMBER2/nc_files/"
+    nc_path        = "/srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_GPP_PLUMBER2/nc_files"
+    PLUMBER2_path  = "/srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_VPD_PLUMBER2/nc_files/"
 
     year_s         = 1971
     year_e         = 2023

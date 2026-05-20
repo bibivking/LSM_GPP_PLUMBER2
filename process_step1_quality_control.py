@@ -138,10 +138,10 @@ def parallel_quality_control(var_name, site_names, zscore_threshold=4, gap_fill=
 if __name__ == "__main__":
 
     # Path of PLUMBER 2 dataset
-    PLUMBER2_met_path   = "/g/data/w97/mm3972/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Met/"
-    PLUMBER2_flux_path  = "/g/data/w97/mm3972/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Flux/"
-    PLUMBER2_path       = "/g/data/w97/mm3972/scripts/PLUMBER2/LSM_GPP_PLUMBER2/nc_files/"
-    PLUMBER2_path_input = "/g/data/w97/mm3972/data/PLUMBER2/"
+    PLUMBER2_met_path   = "/srv/ccrc/LandAP/z5218916/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Met/"
+    PLUMBER2_flux_path  = "/srv/ccrc/LandAP/z5218916/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Flux/"
+    PLUMBER2_path       = "/srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_GPP_PLUMBER2/nc_files/"
+    PLUMBER2_path_input = "/srv/ccrc/LandAP/z5218916/data/PLUMBER2/"
 
     # The site names
     all_site_path     = sorted(glob.glob(PLUMBER2_met_path+"/*.nc"))

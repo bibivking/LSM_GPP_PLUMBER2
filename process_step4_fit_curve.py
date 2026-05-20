@@ -323,7 +323,7 @@ def fit_GAM_for_model(folder_name, file_message, var_name, model_in, vpd, tair,
 if __name__ == "__main__":
 
     # Path of PLUMBER 2 dataset
-    PLUMBER2_path  = "/g/data/w97/mm3972/scripts/PLUMBER2/LSM_VPD_PLUMBER2/nc_files/"
+    PLUMBER2_path  = "/srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_VPD_PLUMBER2/nc_files/"
 
     site_names, IGBP_types, clim_types, model_names = load_default_list()
 

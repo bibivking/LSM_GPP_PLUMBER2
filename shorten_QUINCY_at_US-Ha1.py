@@ -855,10 +855,10 @@ def add_SM_top1m_to_nc_file(PLUMBER2_path, output_file, site_name, SM_names, soi
 if __name__ == "__main__":
 
     # Path of PLUMBER 2 dataset
-    PLUMBER2_path      = "/g/data/w97/mm3972/data/PLUMBER2/"
+    PLUMBER2_path      = "/srv/ccrc/LandAP/z5218916/data/PLUMBER2/"
 
-    PLUMBER2_flux_path = "/g/data/w97/mm3972/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Flux/"
-    PLUMBER2_met_path  = "/g/data/w97/mm3972/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Met/"
+    PLUMBER2_flux_path = "/srv/ccrc/LandAP/z5218916/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Flux/"
+    PLUMBER2_met_path  = "/srv/ccrc/LandAP/z5218916/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Met/"
 
 
     # The name of models
@@ -879,7 +879,7 @@ if __name__ == "__main__":
     print('site_name',site_name)
     SM_names, soil_thicknesses = get_model_soil_moisture_info(site_name)
 
-    output_file      = "/g/data/w97/mm3972/scripts/PLUMBER2/LSM_GPP_PLUMBER2/nc_files/"+site_name+".nc"
+    output_file      = "/srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_GPP_PLUMBER2/nc_files/"+site_name+".nc"
     zscore_threshold = 3 # beyond 3 standard deviation, out of 99.7%
                          # beyond 4 standard deviation, out of 99.349%
 

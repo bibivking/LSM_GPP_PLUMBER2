@@ -13,5 +13,5 @@
 module use /g/data/hh5/public/modules
 module load conda/analysis3-unstable
 
-cd /g/data/w97/mm3972/scripts/PLUMBER2/ML_vs_LSM_PLUMBER2
+cd /srv/ccrc/LandAP/z5218916/script/PLUMBER2/ML_vs_LSM_PLUMBER2
 python process_step4_fit_curve.py

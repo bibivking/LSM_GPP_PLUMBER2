@@ -3,7 +3,7 @@
 # Account name
 account="mm3972"
 
-cd /g/data/w97/mm3972/scripts/PLUMBER2/LSM_VPD_PLUMBER2/submit
+cd /srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_VPD_PLUMBER2/submit
 # Get the list of job IDs for the account and save to a file
 qstat -u "$account" | grep 'express' | awk '{print $1}' > job_ids.txt
 

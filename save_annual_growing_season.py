@@ -27,7 +27,7 @@ def calculate_growing_season(site_name):
     secondly_to_hourly = 3600.
 
     # Prepare dataset
-    PLUMBER2_path_site = f"/g/data/w97/mm3972/scripts/PLUMBER2/LSM_GPP_PLUMBER2/nc_files/{site_name}.nc"
+    PLUMBER2_path_site = f"/srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_GPP_PLUMBER2/nc_files/{site_name}.nc"
     f                  = nc.Dataset(PLUMBER2_path_site, mode='r')
     var                = pd.DataFrame(f.variables['obs_GPP'][:].data, columns=['GPP'])
 
@@ -96,8 +96,8 @@ def save_growing_season_value(model_in, site_name, var_name, IGBP=None, clim_typ
     model_LAI_names    = {'ORC2_r6593':'lai','ORC2_r6593_CO2':'lai','ORC3_r7245_NEE':'lai','ORC3_r8120':'lai',
                           'GFDL':'lai', 'SDGVM':'lai','QUINCY':'LAI','NoahMPv401':'LAI'} #
 
-    PLUMBER2_path_site = f"/g/data/w97/mm3972/scripts/PLUMBER2/LSM_GPP_PLUMBER2/nc_files/{site_name}.nc"
-    PLUMBER2_met_path  = "/g/data/w97/mm3972/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Met/"
+    PLUMBER2_path_site = f"/srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_GPP_PLUMBER2/nc_files/{site_name}.nc"
+    PLUMBER2_met_path  = "/srv/ccrc/LandAP/z5218916/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Met/"
     file_met_path      = glob.glob(PLUMBER2_met_path+"/*"+site_name+"*.nc")
 
     # prepare dataset
@@ -238,10 +238,10 @@ def save_growing_season_value(model_in, site_name, var_name, IGBP=None, clim_typ
 
 def save_growing_season_value_parallal(var_name, model_in, remain_sites, is_growing_season=True):
 
-    PLUMBER2_met_path = "/g/data/w97/mm3972/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Met/"
+    PLUMBER2_met_path = "/srv/ccrc/LandAP/z5218916/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Met/"
     sites_IGBP        = read_IGBP_veg_type(site_names, PLUMBER2_met_path)
 
-    site_character_file = '/g/data/w97/mm3972/scripts/PLUMBER2/LSM_GPP_PLUMBER2/txt/site_character.csv'
+    site_character_file = '/srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_GPP_PLUMBER2/txt/site_character.csv'
     sites_clim          = pd.read_csv(site_character_file)
 
     # Create list of arguments to pass to the parallel function
@@ -294,8 +294,8 @@ if __name__ == "__main__":
 
     # ================== Calculate annual values in growing season ====================
     if 1:
-        PLUMBER2_path_site = "/g/data/w97/mm3972/scripts/PLUMBER2/LSM_GPP_PLUMBER2/nc_files/AU-How.nc"
-        PLUMBER2_met_path  = "/g/data/w97/mm3972/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Met/"
+        PLUMBER2_path_site = "/srv/ccrc/LandAP/z5218916/script/PLUMBER2/LSM_GPP_PLUMBER2/nc_files/AU-How.nc"
+        PLUMBER2_met_path  = "/srv/ccrc/LandAP/z5218916/data/Fluxnet_data/Post-processed_PLUMBER2_outputs/Nc_files/Met/"
 
         is_growing_season  = False
         var_name           = 'NEE'
